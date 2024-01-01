@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="message-box">
+    <h2>Chat Room: {{code}}</h2>
+    <h4>Joined As: <span id="currentUser">{{name}}</span></h4>
+    <div class="messages" id="messages"></div>
+    <div class="inputs">
+        <input type="text" rows="3" placeholder="Message" name="message" id="message">
+        <button type="button" name="send" id="send-btn" onClick="sendMessage()">Send</button>
+        {% if is_host %}
+            <button type="button" name="start-game-btn" id="start-game-btn" onclick="startGame()">Start Game</button>
+        {% endif %}
+        {% if not is_host %}
+        <button type="button" name="start-game-btn" id="start-game-btn" style="display: none;" onclick="startGame()">Start Game</button>
+        {% endif %}
+    </div>
+    <div>
+        <span id="user-role"></span>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var socketio = io();
+
+    const messages = document.getElementById("messages")
+    const createMessage = (name,msg) =>{
+        const content = `
+        <div class = text>
+            <span>
+                <strong>${name}</strong>: ${msg}
+            </span>
+            <span class="muted">
+                ${new Date().toLocaleString()}
+            </span>
+        </div>
+        `;
+        messages.innerHTML += content;
+    };
+
+    socketio.on("message",(data) =>{
+        createMessage(data.name,data.message);
+    })
+    
+    // socketio.on("startGame",(data) =>{
+        
+    // })
+    socketio.on("hostChange", (data) => {
+        const isHost = data.isHost;
+        if (isHost) {
+            document.getElementById("start-game-btn").style.display = "block";
+        } else {
+            document.getElementById("start-game-btn").style.display = "none";
+        }
+    });
+
+    socketio.on("updateRoles", (data) => {
+        debugger;
+        const roomRoles = data.room_roles;
+        let randomWord = data.random_word.replace(/[\[\]]/g, '')
+        randomWord = randomWord.split(",");
+        // console.log(roomRoles, randomWord);
+        console.log(roomRoles);
+        console.log(randomWord);
+        currentUser = document.getElementById("currentUser");
+        console.log(currentUser);
+        // Loop through the roles and display each user their role
+        Object.keys(roomRoles).forEach(username => {
+            console.log(username);
+            if (username == currentUser.innerText) {
+                // const userRole = roomRoles[username];
+                if (roomRoles[username] == "undercover"){
+                    displayUserWord(randomWord[1].trim()); // Function to display the role for the current user
+                }
+                else if (roomRoles[username] == "civilian"){
+                    displayUserWord(randomWord[0].trim()); // Function to display the role for the current user
+                }
+                else{
+                    displayUserWord("You are MR. White"); // Function to display the role for the current user
+                }
+            }
+        });
+    });
+    function displayUserWord(word) {
+        const roleDisplayElement = document.getElementById("user-role");
+        roleDisplayElement.innerHTML = `
+            <span>Your got: <span id="word">${word}</span></span>
+            <button onclick="toggleVisibility()">Hide</button>
+        `;
+    }
+
+    function toggleVisibility() {
+        const wordElement = document.getElementById("word");
+        const button = document.querySelector("#user-role button");
+
+        if (wordElement.style.display === "none") {
+            wordElement.style.display = "inline";
+            button.innerText = "Hide";
+        } else {
+            wordElement.style.display = "none";
+            button.innerText = "Show";
+        }
+    }
+
+    const sendMessage=()=>{
+        const message = document.getElementById("message")
+        if (message.value == "") return;
+        socketio.emit("message", {data: message.value})
+        message.value = "";
+        };
+
+    function startGame() {
+        socketio.emit("startGame");
+    }
+    // Get the input field
+    var input = document.getElementById("message");
+
+    // Execute a function when the user presses a key on the keyboard
+    input.addEventListener("keypress", function(event) {
+    // If the user presses the "Enter" key on the keyboard
+    if (event.key === "Enter") {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Trigger the button element with a click
+        document.getElementById("send-btn").click();
+    }
+    });
+</script>
+
+{% endblock %}
