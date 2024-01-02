@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run tests
-        run: pip install -r requirements.txt 
+        run: pip install -r requirements.txt && pytest
 
 ### ⬇ IMPORTANT PART ⬇ ###
 
