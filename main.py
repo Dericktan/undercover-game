@@ -42,7 +42,7 @@ def home():
         room = code
         if create != False:
             room = generate_unique_code(4)
-            rooms[room] = {"members":[name],"messages":[],"host":name,"roles":[],"words": ""}
+            rooms[room] = {"members":[],"messages":[],"host":name,"roles":[],"words": ""}
         elif code not in rooms:
             return render_template("home.html",error="Room not exists.", code = code, name = name)
         elif name in rooms[room]["members"]:
@@ -67,21 +67,23 @@ def room():
 @socketio.on("connect")
 def connect(auth):
     room = session.get("room")
+    print(rooms)
     name = session.get("name")
     if not name or not room:
         return
     if room not in rooms:
         leave_room(room)
         return
-    
     join_room(room)
     send({"name":name, "message": "has joined the Game"}, to=room)
     rooms[room]["members"].append(name)
+    print(rooms)
     # print(f"{name} joined Game {room}")
 
 @socketio.on("disconnect")
 def disconnect():
     room = session.get("room")
+    print(rooms)
     name = session.get("name")
     leave_room(room)
     if room in rooms:
@@ -89,11 +91,12 @@ def disconnect():
         if len(rooms[room]["members"])<=0:
             del rooms[room]
         elif rooms[room]["host"] == name:
-            rooms[room]["host"] = rooms[room]["members"][1]
+            rooms[room]["host"] = rooms[room]["members"][0]
             send({"name":rooms[room]["host"],"message": "is now new host"}, to=room)
             # Emitting the event when a new host is appointed
             socketio.emit("hostChange", {"isHost": rooms[room]["host"]}, room=session['room'])
     send({"name":name,"message": "has left the Game"}, to=room)
+    print(rooms)
     # print(f"{name} left room {room}")
 
 @socketio.on("message")

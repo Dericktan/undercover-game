@@ -1,5 +1,66 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+    form {
+        width: 300px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    h3 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    .join {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .join input[type="text"] {
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        color: red;
+    }
+</style>
+
 <form method="post">
     <h3>UnderCover Game</h3>
     <div>
