@@ -4,9 +4,11 @@ name: Deploy to heroku UnderCover.
 # Run workflow on every push to master branch.
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #     - Deployment
 
 # Your workflows jobs.
 jobs:
