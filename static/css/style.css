@@ -1,0 +1,41 @@
+.message-box {
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 10px;
+    background-color: whitesmoke;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    width: 80vw;
+    align-items: stretch;
+}
+
+.messages{
+    overflow-y: scroll;
+    flex:1 ;
+    width: 100%;
+}
+.inputs{
+    padding:10px;
+    display: flex;
+}
+h2{
+    text-align: center;
+}
+#message{
+    flex: 1;
+}
+/* popup card */
+.popup-card {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+}

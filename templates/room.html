@@ -4,23 +4,43 @@
     <h2>Chat Room: {{code}}</h2>
     <h4>Joined As: <span id="currentUser">{{name}}</span></h4>
     <div class="messages" id="messages"></div>
-    <div class="inputs">
-        <input type="text" rows="3" placeholder="Message" name="message" id="message">
-        <button type="button" name="send" id="send-btn" onClick="sendMessage()">Send</button>
-        {% if is_host %}
-            <button type="button" name="start-game-btn" id="start-game-btn" onclick="startGame()">Start Game</button>
-        {% endif %}
-        {% if not is_host %}
-        <button type="button" name="start-game-btn" id="start-game-btn" style="display: none;" onclick="startGame()">Start Game</button>
-        {% endif %}
+</div>
+<div class="inputs">
+    <input type="text" rows="3" placeholder="Message" name="message" id="message">
+    <button type="button" name="send" id="send-btn" style="display: inline;" onClick="sendMessage()">Send</button>
+</div>
+<div> {% if is_host %}
+    <button type="button" name="start-game-btn" id="start-game-btn" style="display: inline;" onclick="startGame()">Start Game</button>
+{% endif %}
+{% if not is_host %}
+<button type="button" name="start-game-btn" id="start-game-btn" style="display: none;" onclick="startGame()">Start Game</button>
+{% endif %}</div>
+<div class="voting-section">
+    <h3>Vote to Eliminate</h3>
+    <table id="voting-table">
+        <!-- Table rows with radio buttons for each user -->
+    </table>
+    <button style="display: inline;" onclick="submitVote()">Submit Vote</button>
+    <button style="display: inline;" onclick="skipVote()">Skip Voting</button>
+</div>
+<div>
+    <span id="user-role"></span>
+</div>
+<div class="inputs">
+    <input type="text" rows="3" placeholder="Guess Word" name="guessWord" style="display: none;" id="guessWord">
+    <button type="button" name="guessWordButton" id="guessWordButton" style="display: none;" onClick="guessWord()">Send</button>
+</div>
+<!-- Popup card -->
+<div class="popup-card" id="popup-card">
+    <!-- Content to display room roles and winner info -->
+    <h2>Room Roles and Winner</h2>
+    <div id="roles-info">
+        <!-- Room roles and winner information will be displayed here -->
     </div>
-    <div>
-        <span id="user-role"></span>
-    </div>
-
 </div>
 <script type="text/javascript">
     var socketio = io();
+    var currentUser = document.getElementById("currentUser");
 
     const messages = document.getElementById("messages")
     const createMessage = (name,msg) =>{
@@ -45,14 +65,15 @@
         
     // })
     socketio.on("hostChange", (data) => {
-        const isHost = data.isHost;
-        if (isHost) {
+        var isHost = data.isHost;
+        console.log(currentUser,isHost)
+        if (isHost == currentUser.innerText) {
             document.getElementById("start-game-btn").style.display = "block";
         } else {
             document.getElementById("start-game-btn").style.display = "none";
         }
     });
-
+    var inGameUsers = []
     socketio.on("updateRoles", (data) => {
         debugger;
         const roomRoles = data.room_roles;
@@ -61,11 +82,13 @@
         // console.log(roomRoles, randomWord);
         console.log(roomRoles);
         console.log(randomWord);
-        currentUser = document.getElementById("currentUser");
+        // currentUser = document.getElementById("currentUser");
         console.log(currentUser);
+        inGameUsers = []
         // Loop through the roles and display each user their role
         Object.keys(roomRoles).forEach(username => {
             console.log(username);
+            inGameUsers.push(username)
             if (username == currentUser.innerText) {
                 // const userRole = roomRoles[username];
                 if (roomRoles[username] == "undercover"){
@@ -79,16 +102,19 @@
                 }
             }
         });
+        createVotingTable();
+
     });
     function displayUserWord(word) {
         const roleDisplayElement = document.getElementById("user-role");
         roleDisplayElement.innerHTML = `
-            <span>Your got: <span id="word">${word}</span></span>
-            <button onclick="toggleVisibility()">Hide</button>
+            <span>Your got: <span id="word" style="display:none">${word}</span></span>
+            <button onclick="toggleVisibility()">Show</button>
         `;
     }
 
     function toggleVisibility() {
+        debugger;
         const wordElement = document.getElementById("word");
         const button = document.querySelector("#user-role button");
 
@@ -99,6 +125,115 @@
             wordElement.style.display = "none";
             button.innerText = "Show";
         }
+    }
+
+    function createVotingTable() {
+        const votingTable = document.getElementById("voting-table");
+        votingTable.innerHTML = ""
+        inGameUsers.forEach(user => {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "vote";
+            radio.value = user;
+            cell.appendChild(radio);
+            cell.appendChild(document.createTextNode(user));
+            row.appendChild(cell);
+            votingTable.appendChild(row);
+        });
+    }
+    socketio.on("updateVotingTable", (data) => {
+        inGameUsers = data.inGameUsers
+        createVotingTable()
+    });
+    function toggleButtons() {
+        console.log("toggle button")
+        debugger;
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (button.style.display == "inline") {
+                button.style.display = "none";
+            } else if (button.style.display == "none") {
+                button.style.display = "inline";
+            }
+        });
+    }
+    socketio.on("eliminate", (data) =>{
+        console.log("eliminate"+ data.name)
+        console.log(currentUser)
+        if (currentUser.innerText == data.name) {
+            debugger;
+            toggleButtons()
+        }
+    });
+    socketio.on("guessWord", (data) =>{
+        if (currentUser.innerText == data.white){
+            var guessWordElement = document.getElementById("guessWord")
+            guessWordElement.style.display = "inline";
+            var guessWordButtonElement = document.getElementById("guessWordButton")
+            guessWordButtonElement.style.display = "inline";
+        }
+    })
+    // Function to display the popup card
+    function showPopup(rolesInfo) {
+        const popup = document.getElementById('popup-card');
+        const rolesContent = document.getElementById('roles-info');
+        
+        // Set the content of the popup card with room roles and winner info
+        rolesContent.innerHTML = rolesInfo;
+
+        // Display the popup card
+        popup.style.display = 'block';
+
+        // Hide the popup after 15 seconds
+        setTimeout(() => {
+            popup.style.display = 'none';
+            // Trigger a new game start or reset function here
+            startNewGame(); // Replace with your function to start a new game
+        }, 15000); // 15 seconds (15000 milliseconds)
+    }
+
+    // Socket event to receive room roles from the server
+    socketio.on("roomRoles", (data) => {
+        debugger;
+        // Example data format: { roles: ["Civilian", "Undercover", "Civilian", "White"] }
+        var roles = data.roles;
+        let rolesInfo = '<p>Room Roles:</p><ul>';
+
+        // Generate list items for each player and their respective roles
+        Object.keys(roles).forEach((player) => {
+            rolesInfo += `<li>${player}: ${roles[player]}</li>`;
+        });
+
+        rolesInfo += '</ul><p>Winner: Gaurav</p>'; // Modify this line to display the actual winner
+
+        // Call the function to display the popup card with room roles and winner info
+        showPopup(rolesInfo);
+    });
+    function guessWord(){
+        debugger;
+        var guessedWord = document.getElementById("guessWord").value
+        socketio.emit("guessedWord",guessedWord)
+        var guessWordElement = document.getElementById("guessWord")
+        guessWordElement.style.display = "none";
+        var guessWordButtonElement = document.getElementById("guessWordButton")
+        guessWordButtonElement.style.display = "none";
+    }
+    function submitVote() {
+        const selectedUser = document.querySelector('input[name="vote"]:checked');
+        if (!selectedUser) {
+            alert("Please select a user to vote.");
+            return;
+        }
+        const votedUser = selectedUser.value;
+        // Emit an event to send the voted user to the server
+        socketio.emit("userVote", votedUser);
+    }
+
+    function skipVote() {
+        // Emit an event to skip voting
+        socketio.emit("userVote","SKIP");
     }
 
     const sendMessage=()=>{

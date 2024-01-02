@@ -42,7 +42,7 @@ def home():
         room = code
         if create != False:
             room = generate_unique_code(8)
-            rooms[room] = {"members":[name],"messages":[],"host":name,"roles":[]}
+            rooms[room] = {"members":[name],"messages":[],"host":name,"roles":[],"words": ""}
         elif code not in rooms:
             return render_template("home.html",error="Room not exists.", code = code, name = name)
         elif name in rooms[room]["members"]:
@@ -92,7 +92,7 @@ def disconnect():
             rooms[room]["host"] = rooms[room]["members"][1]
             send({"name":rooms[room]["host"],"message": "is now new host"}, to=room)
             # Emitting the event when a new host is appointed
-            socketio.emit("hostChange", {"isHost": True}, room=session['room'])
+            socketio.emit("hostChange", {"isHost": rooms[room]["host"]}, room=session['room'])
     send({"name":name,"message": "has left the Game"}, to=room)
     print(f"{name} left room {room}")
 
@@ -117,9 +117,11 @@ def startGame():
         words = file.readlines()
     # Select a random word from the list
     random_word = random.choice(words)
+    rooms[room]["words"]=random_word
     # print(random_word)
 
     users = rooms[room]["members"]
+    rooms[room]["inGameUsers"] = {user: False for user in users}
     undercovers = random.sample(users,2)
     room_roles={}
     for user in undercovers:
@@ -127,6 +129,7 @@ def startGame():
     
     civilians = [user for user in users if user not in undercovers]
     mrWhite = random.choice(civilians)
+    print("White is",mrWhite)
     room_roles[mrWhite] = "white"
     civilians.remove(mrWhite)
     for user in civilians:
@@ -134,6 +137,117 @@ def startGame():
     print(room_roles)
     rooms[room]["roles"] = room_roles
     socketio.emit("updateRoles", {'room_roles': room_roles, 'random_word': random_word}, room=session['room'])
+
+
+@socketio.on("userVote")
+def userVote(data):
+    name = session.get("name")
+    room = session.get("room")
+    rooms[room]["inGameUsers"][name]= data
+    content = {
+        "name": name,
+        "message": "Voted for "+data
+    }
+    send(content, to=room)
+    all_voted = not any(value == False for value in rooms.get(room, {}).get("inGameUsers", {}).values())
+    if all_voted:
+        votes_count = {}
+        for voter, voted_for in rooms[room]["inGameUsers"].items():
+            if voted_for in votes_count:
+                votes_count[voted_for] += 1
+            else:
+                votes_count[voted_for] = 1
+        
+        total_users = len(rooms[room]["inGameUsers"])
+        majority_vote = total_users // 2 + 1  # Majority requires more than half of the votes
+        
+        # Find if any user has a majority of votes
+        for user, votes in votes_count.items():
+            if votes >= majority_vote:
+                content = {
+                    "name": "Eliminated",
+                    "message": user
+                }
+                socketio.emit("eliminate",{"name":user},room=room)
+                send(content,to=room)
+                content = {
+                    "name": user,
+                    "message": "was "+rooms[room]["roles"][user]
+                }
+                send(content,to=room)
+                if rooms[room]["roles"][user] == "white":
+                    content = {
+                    "name": "Game",
+                    "message": "wait for white to guess the word"
+                    }
+                    send(content,to=room)
+                    socketio.emit("guessWord",{"white":rooms[room]["roles"][user]},room=room)
+                del rooms[room]["inGameUsers"][user]
+                inGameUsers = {user: False for user in rooms[room]["inGameUsers"].keys()}
+                socketio.emit("updateVotingTable",{"inGameUsers":list(rooms[room]["inGameUsers"].keys())},room=room)
+                break 
+        rooms[room]["inGameUsers"] = {user: False for user in (rooms[room]["inGameUsers"]).keys()}
+    remaining_roles = list(rooms[room]["roles"][user] for user in rooms[room]["inGameUsers"].keys())
+    if all(role == "civilian" for role in remaining_roles):
+        # All remaining players are civilians, end the game
+        content = {
+            "name": "Game",
+            "message": "All remaining players are civilians. Game Over."
+        }
+        send(content, to=room)
+        socketio.emit("roomRoles", {"roles":rooms[room]["roles"]}, room=room) 
+        # Perform any other actions to end the game
+        
+    elif all(role == "undercover" for role in remaining_roles):
+        # All remaining players are undercover, end the game
+        content = {
+            "name": "Game",
+            "message": "All remaining players are undercover. Game Over."
+        }
+        send(content, to=room)
+        socketio.emit("roomRoles", {"roles":rooms[room]["roles"]}, room=room) 
+
+        # Perform any other actions to end the game
+        
+    elif remaining_roles.count("white") == 1 and len(remaining_roles) == 1:
+        # Only the white player remains, end the game
+        content = {
+            "name": "Game",
+            "message": "Only the white player remains. Game Over."
+        }
+        send(content, to=room)
+        socketio.emit("roomRoles", {"roles":rooms[room]["roles"]}, room=room) 
+
+        # Perform any other actions to end the game
+    elif len(remaining_roles) < 3:
+        socketio.emit("roomRoles", {"roles":rooms[room]["roles"]}, room=room) 
+        
+    else:
+        # Update the voting table and continue the game
+        socketio.emit("updateVotingTable", {"inGameUsers": list(rooms[room]["inGameUsers"].keys())}, room=room)
+
+    print(session.get("name"))
+    print(data)
+
+@socketio.on("guessedWord")
+def guessedWord(data):
+    print("Guessed word emit.io.call")
+    room = session.get("room")
+    print(rooms[room]["words"])
+    if data.lower() in rooms[room]["words"].lower():
+        content = {
+                    "name": "Game",
+                    "message": f"White Wins; guess: {data}"
+                    }
+        send(content,to=room)
+        socketio.emit("roomRoles", {"roles":rooms[room]["roles"]}, room=room) 
+    else:
+        content = {
+                    "name": "Game",
+                    "message": "White guessed Wrong Word"
+                    }
+        send(content,to=room)
+
 
 if __name__ == "__main__":
     socketio.run(app,debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
