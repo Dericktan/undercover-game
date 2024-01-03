@@ -67,7 +67,7 @@ def room():
 @socketio.on("connect")
 def connect(auth):
     room = session.get("room")
-    print(rooms)
+    # print(rooms)
     name = session.get("name")
     if not name or not room:
         return
@@ -77,13 +77,13 @@ def connect(auth):
     join_room(room)
     send({"name":name, "message": "has joined the Game"}, to=room)
     rooms[room]["members"].append(name)
-    print(rooms)
+    # print(rooms)
     # print(f"{name} joined Game {room}")
 
 @socketio.on("disconnect")
 def disconnect():
     room = session.get("room")
-    print(rooms)
+    # print(rooms)
     name = session.get("name")
     leave_room(room)
     if room in rooms:
@@ -96,7 +96,7 @@ def disconnect():
             # Emitting the event when a new host is appointed
             socketio.emit("hostChange", {"isHost": rooms[room]["host"]}, room=session['room'])
     send({"name":name,"message": "has left the Game"}, to=room)
-    print(rooms)
+    # print(rooms)
     # print(f"{name} left room {room}")
 
 @socketio.on("message")
