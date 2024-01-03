@@ -1,30 +1,92 @@
-.message-box {
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
-    border-radius: 10px;
-    background-color: whitesmoke;
-    height: 80vh;
+.content {
     display: flex;
     flex-direction: column;
-    width: 80vw;
-    align-items: stretch;
+    align-items: center;
 }
 
-.messages{
-    overflow-y: scroll;
-    flex:1 ;
-    width: 100%;
+.buttons {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 10px;
 }
-.inputs{
-    padding:10px;
+
+.voting-section {
+    margin-top: 20px; /* Adjust spacing from message box */
+    width: 80%; /* Adjust width if needed */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* Move vote buttons to the bottom of the voting section */
+.voting-buttons {
     display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
 }
-h2{
-    text-align: center;
+
+
+.join {
+display: flex;
+flex-direction: row;
+width: 100%;
 }
-#message{
+
+.create-btn {
+width: 100%;
+}
+
+.message-box {
+    border: 2px solid black;
+    border-radius: 10px;
+    background-color: whitesmoke;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    width: 90vw;
+    align-items: stretch;
+    margin: 10px auto; /* Center the box */
+    padding: 10px;
+}
+
+.messages {
+    overflow-y: scroll;
     flex: 1;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    margin-top: 10px;
+    background-color: #f7f7f7;
+}
+
+.inputs {
+padding: 10px;
+display: flex;
+}
+
+h2,h4 {
+text-align: center;
+}
+
+#message {
+flex: 1;
+}
+
+.text {
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: space-between;
+padding-left: 10px;
+padding-right: 10px;
+}
+
+.muted {
+font-size: 10px;
+color: darkgray;
 }
 /* popup card */
 .popup-card {
@@ -39,3 +101,73 @@ h2{
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     z-index: 9999;
 }
+
+#user-role {
+    margin-top: 20px;
+}
+
+#guessWordButton {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#guessWordButton:hover {
+    background-color: #45a049;
+}
+
+#start-game-btn {
+    padding: 8px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#start-game-btn:hover {
+    background-color: #45a049;
+}
+
+#voting-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#voting-table td, #voting-table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.voting-buttons button {
+    margin-right: 10px;
+    padding: 8px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.voting-buttons button:hover {
+    background-color: #45a049;
+}
+
+#send-btn {
+    padding: 8px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#send-btn:hover {
+    background-color: #45a049;
+}
+
