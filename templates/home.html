@@ -23,7 +23,6 @@
     input[type="text"] {
         width: 100%;
         padding: 8px;
-        margin-bottom: 10px;
         border-radius: 3px;
         border: 1px solid #ccc;
         box-sizing: border-box;
@@ -32,12 +31,12 @@
     .join {
         display: flex;
         align-items: center;
+        margin-top: 10px;
         margin-bottom: 20px;
-    }
-
-    .join input[type="text"] {
-        flex: 1;
-        margin-right: 10px;
+        justify-content: space-between;
+        gap: 10px;
+        text-wrap: nowrap;
+        flex-direction: row;
     }
 
     button {
@@ -62,7 +61,7 @@
 </style>
 
 <form method="post">
-    <h3>UnderCover Game</h3>
+    <h3>Undercover Game</h3>
     <div>
         <label for="name">Name</label>
         <input type="text" placeholder="Pick a name!" name="name" value="{{name}}">

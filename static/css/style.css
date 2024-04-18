@@ -1,20 +1,38 @@
+* {
+    font-family: "Roboto";
+}
+
 .content {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
+.title {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.subtitle {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
 .buttons {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .voting-section {
-    margin-top: 20px; /* Adjust spacing from message box */
-    width: 80%; /* Adjust width if needed */
+    margin-top: 20px;
+    /* Adjust spacing from message box */
+    width: 80%;
+    /* Adjust width if needed */
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 10px;
@@ -27,15 +45,14 @@ gap: 10px;
     margin-top: 10px;
 }
 
-
 .join {
-display: flex;
-flex-direction: row;
-width: 100%;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
 }
 
 .create-btn {
-width: 100%;
+    width: 100%;
 }
 
 .message-box {
@@ -47,8 +64,10 @@ width: 100%;
     flex-direction: column;
     width: 90vw;
     align-items: stretch;
-    margin: 10px auto; /* Center the box */
+    margin: 10px auto;
+    /* Center the box */
     padding: 10px;
+    text-align: center;
 }
 
 .messages {
@@ -57,37 +76,33 @@ width: 100%;
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 5px;
-    padding: 5px;
     margin-top: 10px;
     background-color: #f7f7f7;
 }
 
 .inputs {
-padding: 10px;
-display: flex;
-}
-
-h2,h4 {
-text-align: center;
+    padding: 10px;
+    display: flex;
 }
 
 #message {
-flex: 1;
+    flex: 1;
 }
 
 .text {
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: space-between;
-padding-left: 10px;
-padding-right: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .muted {
-font-size: 10px;
-color: darkgray;
+    font-size: 10px;
+    color: darkgray;
 }
+
 /* popup card */
 .popup-card {
     display: none;
@@ -116,7 +131,7 @@ color: darkgray;
     cursor: pointer;
 }
 
-#guessWordButton:hover {
+#guessWordButton:hover:enabled {
     background-color: #45a049;
 }
 
@@ -129,7 +144,7 @@ color: darkgray;
     cursor: pointer;
 }
 
-#start-game-btn:hover {
+#start-game-btn:hover:enabled {
     background-color: #45a049;
 }
 
@@ -138,7 +153,8 @@ color: darkgray;
     width: 100%;
 }
 
-#voting-table td, #voting-table th {
+#voting-table td,
+#voting-table th {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
@@ -154,8 +170,13 @@ color: darkgray;
     cursor: pointer;
 }
 
-.voting-buttons button:hover {
+.voting-buttons button:hover:enabled {
     background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 #send-btn {
@@ -167,7 +188,10 @@ color: darkgray;
     cursor: pointer;
 }
 
-#send-btn:hover {
+#send-btn:hover:enabled {
     background-color: #45a049;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}

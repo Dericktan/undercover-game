@@ -2,52 +2,49 @@
 {% block content %}
 <div class="content">
     <div class="message-box">
-        <h2>Game Room: {{code}}</h2>
-        <h4>Joined As: <span id="currentUser">{{name}}</span></h4>
+        <div class="title">
+            Room Code<br/><span style="filter: blur(8px)">{{code}}</span>
+        </div>
+        <div class="subtitle">
+            <span id="currentUser">{{name}}</span>
+            <br>
+        </div>
+        <div class="buttons">
+            {% if is_host %}
+                <input type="number" class="text" placeholder="Number of Undercover" name="setUndercover" id="setUndercover" style="text-align: center;"> <br>
+                <button type="button" name="start-game-btn" id="start-game-btn" onclick="startGame()">Start Game</button>
+            {% else %}
+                <input type="number" placeholder="Number of Undercover" name="setUndercover" id="setUndercover"
+                    style="display: none;"> <br>
+                <button type="button" name="start-game-btn" id="start-game-btn" style="display: none;"
+                    onclick="startGame()">Start Game</button>
+            {% endif %}
+        </div>
         <div class="messages" id="messages"></div>
-        <div class="inputs">
-            <input type="text" rows="3" placeholder="Message" name="message" id="message">
-            <button type="button" name="send" id="send-btn" style="display: inline;"
-                onClick="sendMessage()">Send</button>
-        </div>
     </div>
-    <br>
-    <div class="buttons">
-        {% if is_host %}
-        <div class="join">
-            <input type="number" rows="3" placeholder="Number of Undercover" name="setUndercover" id="setUndercover">
-            <button type="button" name="start-game-btn" id="start-game-btn" onclick="startGame()">Start Game</button>
-        </div>
-        {% else %}
-        <div class="join">
-            <input type="text" rows="3" placeholder="Number of Undercover" name="setUndercover" id="setUndercover"
-                style="display: none;">
-            <button type="button" name="start-game-btn" id="start-game-btn" style="display: none;"
-                onclick="startGame()">Start Game</button>
-        </div>
-        {% endif %}
+    <div>
+        <span id="user-role"></span>
     </div>
-    <div class="voting-section" id="voting-section" style="display: unset;">
+    <div class="voting-section" id="voting-section" style="display: none;">
         <h3>Vote to Eliminate</h3>
         <table id="voting-table">
             <!-- Table rows with radio buttons for each user -->
         </table>
         <div class="voting-buttons">
-            <button onclick="submitVote()">Submit Vote</button>
-            <button onclick="skipVote()">Skip Voting</button>
+            <button onclick="submitVote()" id="submitVoteButton">Submit Vote</button>
+            <button onclick="skipVote()" id="skipVoteButton">Skip Voting</button>
         </div>
     </div>
-    <div>
-        <span id="user-role"></span>
-    </div>
     <div class="inputs">
-        <input type="text" rows="3" placeholder="Guess Word" name="guessWord" style="visibility: hidden;" id="guessWord">
-        <button type="button" name="guessWordButton" id="guessWordButton" style="display: none;" onClick="guessWord()">Send</button>
+        <div id="guessWord" style="visibility: hidden;">
+            <input type="text" rows="3" placeholder="Guess Word" name="guessWord" id="guessWordInput">
+            <button type="button" name="guessWordButton" id="guessWordButton" style="display: none;" onClick="guessWord()">Send</button>
+        </div>
     </div>
     <!-- Popup card -->
     <div class="popup-card" id="popup-card">
         <!-- Content to display room roles and winner info -->
-        <h2>Room Roles and Winner</h2>
+        <h2 id="popup-title"></h2>
         <div id="roles-info">
             <!-- Room roles and winner information will be displayed here -->
         </div>
@@ -60,7 +57,7 @@
     const messages = document.getElementById("messages")
     const createMessage = (name, msg) => {
         const content = `
-        <div class = text>
+        <div class="text" user="name">
             <span>
                 <strong>${name}</strong>: ${msg}
             </span>
@@ -74,11 +71,21 @@
 
     socketio.on("message", (data) => {
         createMessage(data.name, data.message);
+        let history = document.getElementById('messages')
+        let interval    
+        interval = setInterval(function() {
+            history.scrollTop = history.scrollHeight
+            clearInterval(interval)
+        }, 1)
     })
 
-    // socketio.on("startGame",(data) =>{
+    socketio.on("gameStarted",(data) =>{
+        console.log("Start Game");
+        document.getElementById("messages").innerHTML = "";
+        const button = document.getElementById("voting-section");
+        button.style.display = "block"
+    })
 
-    // })
     socketio.on("hostChange", (data) => {
         var isHost = data.isHost;
         // console.log(currentUser, isHost)
@@ -92,7 +99,6 @@
     });
     var inGameUsers = []
     socketio.on("updateRoles", (data) => {
-        debugger;
         const roomRoles = data.room_roles;
         let randomWord = data.random_word.replace(/[\[\]]/g, '')
         randomWord = randomWord.split(",");
@@ -109,13 +115,16 @@
             if (username == currentUser.innerText) {
                 // const userRole = roomRoles[username];
                 if (roomRoles[username] == "undercover") {
-                    displayUserWord(randomWord[1].trim()); // Function to display the role for the current user
+                    displayUserWord(randomWord[1].trim());
+                    showPopup("", "<h1>You are Undercover</h1>", 10);
                 }
                 else if (roomRoles[username] == "civilian") {
-                    displayUserWord(randomWord[0].trim()); // Function to display the role for the current user
+                    displayUserWord(randomWord[0].trim());
+                    showPopup("", "<h1>You are Civilian</h1>", 10);
                 }
                 else {
-                    displayUserWord("You are MR. White"); // Function to display the role for the current user
+                    displayUserWord(" ");
+                    showPopup("", "<h1>You are Mr. White</h1>", 10);
                 }
             }
         });
@@ -123,13 +132,11 @@
     function displayUserWord(word) {
         const roleDisplayElement = document.getElementById("user-role");
         roleDisplayElement.innerHTML = `
-            <span>Your got: <span id="word" style="display:none">${word}</span></span>
-            <button onclick="toggleVisibility()">Show</button>
+            Word: ${word}
         `;
     }
 
     function toggleVisibility() {
-        debugger;
         const wordElement = document.getElementById("word");
         const button = document.querySelector("#user-role button");
 
@@ -146,17 +153,24 @@
         const votingTable = document.getElementById("voting-table");
         votingTable.innerHTML = ""
         inGameUsers.forEach(user => {
+            if (currentUser.innerText == user) return;
             const row = document.createElement("tr");
             const cell = document.createElement("td");
+            const label = document.createElement("label");
             const radio = document.createElement("input");
             radio.type = "radio";
             radio.name = "vote";
             radio.value = user;
-            cell.appendChild(radio);
-            cell.appendChild(document.createTextNode(user));
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(user));
+            label.setAttribute("class", "cursor-pointer");
+            cell.appendChild(label);
             row.appendChild(cell);
             votingTable.appendChild(row);
         });
+        
+        document.getElementById("submitVoteButton").disabled = false;
+        document.getElementById("skipVoteButton").disabled = false;
     }
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -171,7 +185,6 @@
     });
     function toggleButtons() {
         // console.log("toggle button")
-        debugger;
         const button = document.getElementById("voting-section");
         button.style.display = "none"
     }
@@ -179,12 +192,10 @@
         // console.log("eliminate" + data.name)
         // console.log(currentUser)
         if (currentUser.innerText == data.name) {
-            debugger;
             toggleButtons()
         }
     });
     socketio.on("guessWord", (data) => {
-        debugger;
         // console.log("guessWord"+data.white+data)
         if (currentUser.innerText == data.white) {
             const guessWord = document.getElementById("guessWord")
@@ -194,12 +205,15 @@
         }
     })
     // Function to display the popup card
-    function showPopup(rolesInfo) {
+    function showPopup(title, content, duration) {
         const popup = document.getElementById('popup-card');
+        const popupTitle = document.getElementById('popup-title');
         const rolesContent = document.getElementById('roles-info');
 
+        popupTitle.innerHTML = title;
+
         // Set the content of the popup card with room roles and winner info
-        rolesContent.innerHTML = rolesInfo;
+        rolesContent.innerHTML = content;
 
         // Display the popup card
         popup.style.display = 'block';
@@ -207,30 +221,32 @@
         // Hide the popup after 15 seconds
         setTimeout(() => {
             popup.style.display = 'none';
-            location.reload();
-        }, 15000); // 15 seconds (15000 milliseconds)
+        }, duration * 1000); // 15 seconds (15000 milliseconds)
     }
 
     // Socket event to receive room roles from the server
     socketio.on("roomRoles", (data) => {
-        debugger;
 
         var roles = data.roles;
         let rolesInfo = '<p>Room Roles:</p><ul>';
 
         // Generate list items for each player and their respective roles
         Object.keys(roles).forEach((player) => {
-            rolesInfo += `<li>${player}: ${roles[player]}</li>`;
+            const roleNames = {
+                "undercover": "Undercover",
+                "civilian": "Civilian",
+                "white": "Mr. White"
+            };
+            rolesInfo += `<li>${player}: ${roleNames[roles[player]]}</li>`;
         });
 
-        rolesInfo += '</ul><p>Winner:' + data.winner + '</p>'; // Modify this line to display the actual winner
+        rolesInfo += '</ul><p>Winner: ' + data.winner + '</p>'; // Modify this line to display the actual winner
 
         // Call the function to display the popup card with room roles and winner info
-        showPopup(rolesInfo);
+        showPopup("Roles and Winner", rolesInfo, 15);
     });
     function guessWord() {
-        debugger;
-        var guessedWordValue = document.getElementById("guessWord").value
+        var guessedWordValue = document.getElementById("guessWordInput").value
         socketio.emit("guessedWord", {"data":guessedWordValue,"name":currentUser.innerText})
         var guessWordElement = document.getElementById("guessWord")
         guessWordElement.style.visibility = "hidden";
@@ -246,11 +262,13 @@
         const votedUser = selectedUser.value;
         // Emit an event to send the voted user to the server
         socketio.emit("userVote", votedUser);
+        document.getElementById("submitVoteButton").disabled = true;
+        document.getElementById("skipVoteButton").disabled = true;
     }
 
     function skipVote() {
         // Emit an event to skip voting
-        socketio.emit("userVote", "SKIP");
+        socketio.emit("userVote", "skip");
     }
 
     const sendMessage = () => {
@@ -268,15 +286,15 @@
     var input = document.getElementById("message");
 
     // Execute a function when the user presses a key on the keyboard
-    input.addEventListener("keypress", function (event) {
-        // If the user presses the "Enter" key on the keyboard
-        if (event.key === "Enter") {
-            // Cancel the default action, if needed
-            event.preventDefault();
-            // Trigger the button element with a click
-            document.getElementById("send-btn").click();
-        }
-    });
+    // input.addEventListener("keypress", function (event) {
+    //     // If the user presses the "Enter" key on the keyboard
+    //     if (event.key === "Enter") {
+    //         // Cancel the default action, if needed
+    //         event.preventDefault();
+    //         // Trigger the button element with a click
+    //         document.getElementById("send-btn").click();
+    //     }
+    // });
 </script>
 
 {% endblock %}
