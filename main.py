@@ -275,7 +275,7 @@ def guessedWord(data):
     if data["data"] != "" and data["data"].lower() in words:
         content = {
             "name": "System",
-            "message": f"Mr. White correctly guess the word: {data["data"]}. Mr. White won the game."
+            "message": "Mr. White correctly guess the word: "+data["data"]+". Mr. White won the game."
         }
         send(content,to=room)
         socketio.emit("roomRoles", {"roles":rooms[room]["roles"],"winner":name + " also known as Mr. White"}, room=room) 
