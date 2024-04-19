@@ -66,7 +66,7 @@
             </span>
         </div>
         `;
-        messages.innerHTML += content;
+        messages.innerHTML = content + messages.innerHTML;
     };
 
     socketio.on("message", (data) => {
